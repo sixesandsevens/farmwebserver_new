@@ -1,22 +1,19 @@
-import os
-import json
-import uuid
+# app.py
+import os, json, uuid
 from datetime import datetime
 from flask import (
     Flask, render_template, request, redirect, url_for,
     flash, session, jsonify, send_from_directory
 )
-from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import (
-    LoginManager, UserMixin,
-    login_user, logout_user, login_required, current_user
+from werkzeug.utils    import secure_filename
+from flask_sqlalchemy  import SQLAlchemy
+from flask_login       import (
+    LoginManager, login_user, logout_user,
+    login_required, current_user
 )
 
-# pull in your models and forms
 from models import db, User
-from forms import RegistrationForm, LoginForm, PasswordChangeForm
+from forms  import RegistrationForm, LoginForm, PasswordChangeForm
 
 app = Flask(__name__)
 app.secret_key = 'dev'
@@ -26,6 +23,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     'sixesandsevens.mysql.pythonanywhere-services.com'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+UPLOAD_FOLDER=os.path.join(app.static_folder, 'uploads'),
+MAX_CONTENT_LENGTH=16 * 1024 * 1024
 
 # initialise extensions
 db.init_app(app)
@@ -205,11 +205,9 @@ def reply(thread_id):
     return redirect(url_for('view_thread', thread_id=thread_id))
 
 # dirty fix for image uploads
-#app.route('/forum/static/<path:filename>')
-#def forum_static(filename):
-#    return send_from_directory(app.static_folder, filename)
-
-
+app.route('/forum/static/<path:filename>')
+def forum_static(filename):
+    return send_from_directory(app.static_folder, filename)
 
 @app.route('/chickens')
 def chickens():
@@ -240,9 +238,7 @@ def camps():
     return render_template('camps.html')
 
 
-
 if __name__ == '__main__':
-    # create tables if missing
     with app.app_context():
         db.create_all()
     app.run(debug=True)
