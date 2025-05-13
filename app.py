@@ -49,29 +49,6 @@ login_manager.login_view = 'login'  # Redirect to 'login' view if not authentica
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-#Create Registration and Login Forms
-
-class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Register')
-
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user:
-            raise ValidationError('Username already exists.')
-
-    def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user:
-            raise ValidationError('Email already registered.')
-
-class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    submit = SubmitField('Login')
 
 
 #Protect Routes with @login_required
@@ -88,6 +65,43 @@ def upload_to_gallery():
     # Your existing code for uploading to the gallery
     pass
 
+#login 
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user)
+            flash("Login successful.", "success")
+            return redirect(url_for("index"))
+        else:
+            flash("Invalid email or password.", "danger")
+    return render_template("login.html", form=form)
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash("Account created. Please log in.", "success")
+        return redirect(url_for("login"))
+    return render_template("register.html", form=form)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You have been logged out.", "info")
+    return redirect(url_for("index"))
 
 
 # Ensure the uploads directory exists
@@ -206,39 +220,6 @@ def reply(thread_id):
     save_threads(threads)
     return redirect(url_for('view_thread', thread_id=thread_id))
 
-# login removed
-def login():
-    if request.method == 'POST':
-        identifier = request.form['identifier']
-        password = request.form['password']
-        for user in load_users():
-            if user['username'] == identifier or user['email'] == identifier:
-                if check_password_hash(user['password'], password):
-                    session['username'] = user['username']
-                    return redirect(url_for('forum'))
-        flash('Invalid login.')
-    return render_template('login.html')
-
-# register removed
-def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = generate_password_hash(request.form['password'])
-        users = load_users()
-        if any(u['username'] == username or u['email'] == email for u in users):
-            flash('User already exists.')
-            return redirect(url_for('register'))
-        users.append({'username': username, 'email': email, 'password': password})
-        save_users(users)
-        flash('Registration successful.')
-        return redirect(url_for('login'))
-    return render_template('register.html')
-
-# logout removed
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('index'))
 
 @app.route('/chickens')
 def chickens():
