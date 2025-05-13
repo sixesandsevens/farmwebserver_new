@@ -205,9 +205,9 @@ def reply(thread_id):
     return redirect(url_for('view_thread', thread_id=thread_id))
 
 # dirty fix for image uploads
-@app.route('/forum/static/<path:filename>')
-def forum_static(filename):
-    return send_from_directory(app.static_folder, filename)
+#app.route('/forum/static/<path:filename>')
+#def forum_static(filename):
+#    return send_from_directory(app.static_folder, filename)
 
 
 
