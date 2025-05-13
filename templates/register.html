@@ -1,12 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Register</h2>
-<form method="POST">
-  {{ form.hidden_tag() }}
-  <p>{{ form.username.label }} {{ form.username() }}</p>
-  <p>{{ form.email.label }} {{ form.email() }}</p>
-  <p>{{ form.password.label }} {{ form.password() }}</p>
-  <p>{{ form.confirm_password.label }} {{ form.confirm_password() }}</p>
-  <p>{{ form.submit() }}</p>
-</form>
+<main class="container">
+  <h2>Register</h2>
+
+  <!-- Show flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash {{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <p>{{ form.username.label }}<br>{{ form.username() }}</p>
+    <p>{{ form.email.label }}<br>{{ form.email() }}</p>
+    <p>{{ form.password.label }}<br>{{ form.password() }}</p>
+    <p>{{ form.confirm_password.label }}<br>{{ form.confirm_password() }}</p>
+    <p>{{ form.submit() }}</p>
+  </form>
+</main>
 {% endblock %}
