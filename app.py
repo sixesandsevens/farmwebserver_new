@@ -14,21 +14,19 @@ from flask_login import LoginManager
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
-from app import User  # Adjust import based on your project structure
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import RegistrationForm, LoginForm  # Adjust import based on your project structure
-from models import db  # Import db from models
-from models import User  # ✅ if User is in models.py
+from models import User  # ✅ This is the correct import
 from forms import RegistrationForm, LoginForm
+from models import db, User
 
 app = Flask(__name__)
 app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:Absolute9497@sixesandsevens.mysql.pythonanywhere-services.com'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
+db.init_app(app)
 
 
 
@@ -40,6 +38,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs('data', exist_ok=True)
+
+
 
 
 # Define the User model
@@ -89,6 +89,34 @@ class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
+
+#Register
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        existing_user = User.query.filter_by(username=form.username.data).first()
+        existing_email = User.query.filter_by(email=form.email.data).first()
+
+        if existing_user:
+            flash("That username is already taken. Please choose another one.", "danger")
+            return render_template("register.html", form=form)
+
+        if existing_email:
+            flash("That email is already registered. Please use a different one.", "danger")
+            return render_template("register.html", form=form)
+
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash("Registration successful. Please log in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register.html", form=form)
 
 
 #Protect Routes with @login_required
@@ -236,31 +264,6 @@ def login():
         flash('Invalid login.')
     return render_template('login.html')
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        existing_user = User.query.filter_by(username=form.username.data).first()
-        existing_email = User.query.filter_by(email=form.email.data).first()
-
-        if existing_user:
-            flash("That username is already taken. Please choose another one.", "danger")
-            return render_template("register.html", form=form)
-
-        if existing_email:
-            flash("That email is already registered. Please use a different one.", "danger")
-            return render_template("register.html", form=form)
-
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-
-        db.session.add(user)
-        db.session.commit()
-
-        flash("Registration successful. Please log in.", "success")
-        return redirect(url_for("login"))
-
-    return render_template("register.html", form=form)
 
 
 # logout removed
