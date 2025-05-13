@@ -14,7 +14,6 @@ from flask_login import LoginManager
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
-from app import User  # Adjust import based on your project structure
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import RegistrationForm, LoginForm  # Adjust import based on your project structure
@@ -27,9 +26,7 @@ app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:Absolute9497@sixesandsevens.mysql.pythonanywhere-services.com'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
+db.init_app(app)
 
 
 # File paths
