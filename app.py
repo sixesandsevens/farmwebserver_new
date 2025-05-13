@@ -86,15 +86,24 @@ def login():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("index"))
+
     form = RegistrationForm()
     if form.validate_on_submit():
+        # Create the user object
         user = User(username=form.username.data, email=form.email.data)
+
+        # ✅ Set the hashed password
         user.set_password(form.password.data)
+
+        # Add and commit to database
         db.session.add(user)
         db.session.commit()
+
         flash("Account created. Please log in.", "success")
         return redirect(url_for("login"))
+        
     return render_template("register.html", form=form)
+
 
 @app.route("/logout")
 @login_required
