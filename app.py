@@ -24,7 +24,7 @@ from forms import RegistrationForm, LoginForm
 app = Flask(__name__)
 app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:Absolute9497@sixesandsevens.mysql.pythonanywhere-services.com/sixesandsevens$default'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:absolute9497@sixesandsevens.mysql.pythonanywhere-services.com/sixesandsevens$default'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
