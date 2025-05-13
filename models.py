@@ -1,18 +1,34 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
+# forms.py
+from flask_wtf import FlaskForm
+from wtforms    import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 
+from models import User
 
-db = SQLAlchemy()
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    email    = StringField('Email',    validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm  = PasswordField('Confirm Password',
+                  validators=[DataRequired(), EqualTo('password')])
+    submit   = SubmitField('Register')
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    def validate_username(self, username):
+        if User.query.filter_by(username=username.data).first():
+            raise ValidationError('Username already exists.')
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def validate_email(self, email):
+        if User.query.filter_by(email=email.data).first():
+            raise ValidationError('Email already registered.')
+
+class LoginForm(FlaskForm):
+    email    = StringField('Email',    validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit   = SubmitField('Login')
+
+class PasswordChangeForm(FlaskForm):
+    new_password = PasswordField('New Password', validators=[DataRequired()])
+    confirm      = PasswordField('Confirm New Password',
+                    validators=[DataRequired(), EqualTo('new_password',
+                      message="Passwords must match")])
+    submit       = SubmitField('Update Password')

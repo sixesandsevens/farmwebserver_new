@@ -204,17 +204,12 @@ def reply(thread_id):
     save_json(THREADS_FILE, threads)
     return redirect(url_for('view_thread', thread_id=thread_id))
 
-
+# dirty fix for image uploads
 @app.route('/forum/static/<path:filename>')
 def forum_static(filename):
     return send_from_directory(app.static_folder, filename)
 
 
-
-# logout removed
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('index'))
 
 @app.route('/chickens')
 def chickens():
@@ -244,11 +239,6 @@ def workdays():
 def camps():
     return render_template('camps.html')
 
-# ... dirty fix for image uploads ...
-
-@app.route('/forum/static/<path:filename>')
-def forum_static(filename):
-    return send_from_directory(app.static_folder, filename) 
 
 
 if __name__ == '__main__':
