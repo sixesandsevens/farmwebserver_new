@@ -6,6 +6,7 @@
 </head>
 <body>
     <nav>
+      <div class="nav-main">
         <a href="/">Home</a>
         <a href="/disorientation">Disorientation Guide</a>
         <a href="/chickens">Chickens</a>
@@ -16,19 +17,16 @@
         <a href="/gallery">Gallery</a>
         <a href="/zines">Zine Library</a>
         <a href="/forum">Forum</a>
-
+      </div>
+      <div class="nav-auth">
         {% if current_user.is_authenticated %}
-  <li><a href="{{ url_for('logout') }}">Logout</a></li>
-{% else %}
-  {% if current_user.is_authenticated %}
-  <li><a href="{{ url_for('account') }}">Logged in as: {{ current_user.username }}</a></li>
-  <li><a href="{{ url_for('logout') }}">Logout</a></li>
-{% else %}
-  <li><a href="{{ url_for('login') }}">Login</a></li>
-  <li><a href="{{ url_for('register') }}">Register</a></li>
-{% endif %}
-{% endif %}
-
+          <a href="{{ url_for('account') }}">Logged in as: {{ current_user.username }}</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+      </div>
     </nav>
     
     {% block content %}{% endblock %}

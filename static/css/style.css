@@ -1,4 +1,3 @@
-
 body {
   font-family: sans-serif;
   background-color: #121212;
@@ -9,12 +8,37 @@ body {
 
 nav {
   background: #8000007e;
-  padding: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  padding: 0 1rem;
 }
 
-nav a {
+/* Center main nav links */
+.nav-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+.nav-main a {
   color: #c40404;
-  margin-right: 20px;
+  margin: 0 1rem;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Auth links in top-right */
+.nav-auth {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 1rem;
+}
+.nav-auth a {
+  color: #c40404;
   text-decoration: none;
   font-weight: bold;
 }
@@ -28,6 +52,7 @@ nav a {
   border-radius: 6px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
 }
+
 
 
 .forum-title {
