@@ -255,6 +255,10 @@ def camps():
 def forum_static(filename):
     return send_from_directory(app.static_folder, filename) 
 
+print("Registered endpoints:")
+for rule in app.url_map.iter_rules():
+    print(rule.endpoint, "->", rule)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
