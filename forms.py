@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
-from models import User
+from app import User  # Adjust import based on your project structure
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -11,11 +11,13 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('Register')
 
     def validate_username(self, username):
-        if User.query.filter_by(username=username.data).first():
+        user = User.query.filter_by(username=username.data).first()
+        if user:
             raise ValidationError('Username already exists.')
 
     def validate_email(self, email):
-        if User.query.filter_by(email=email.data).first():
+        user = User.query.filter_by(email=email.data).first()
+        if user:
             raise ValidationError('Email already registered.')
 
 class LoginForm(FlaskForm):

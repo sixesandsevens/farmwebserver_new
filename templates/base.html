@@ -1,12 +1,4 @@
 <!DOCTYPE html>
-
-<style>
-  .flashes { list-style: none; padding: 0; }
-  .flash.success { color: green; }
-  .flash.danger { color: red; }
-  .flash.info { color: blue; }
-</style>
-
 <html>
 <head>
     <title>{% block title %}Farm Info{% endblock %}</title>
@@ -28,8 +20,13 @@
         {% if current_user.is_authenticated %}
   <li><a href="{{ url_for('logout') }}">Logout</a></li>
 {% else %}
+  {% if current_user.is_authenticated %}
+  <li><a href="{{ url_for('account') }}">Logged in as: {{ current_user.username }}</a></li>
+  <li><a href="{{ url_for('logout') }}">Logout</a></li>
+{% else %}
   <li><a href="{{ url_for('login') }}">Login</a></li>
   <li><a href="{{ url_for('register') }}">Register</a></li>
+{% endif %}
 {% endif %}
 
     </nav>

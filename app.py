@@ -14,6 +14,7 @@ from flask_login import LoginManager
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from app import User  # Adjust import based on your project structure
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import RegistrationForm, LoginForm  # Adjust import based on your project structure
@@ -24,9 +25,11 @@ from forms import RegistrationForm, LoginForm
 app = Flask(__name__)
 app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:absolute9497@sixesandsevens.mysql.pythonanywhere-services.com/sixesandsevens$default'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:Absolute9497@sixesandsevens.mysql.pythonanywhere-services.com'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
+
+db = SQLAlchemy(app)
+
 
 
 # File paths
@@ -39,6 +42,20 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
 
+# Define the User model
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 #initialize flask-login
 
 login_manager = LoginManager()
@@ -49,6 +66,29 @@ login_manager.login_view = 'login'  # Redirect to 'login' view if not authentica
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+#Create Registration and Login Forms
+
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Register')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('Username already exists.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('Email already registered.')
+
+class LoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
 
 
 #Protect Routes with @login_required
@@ -65,52 +105,6 @@ def upload_to_gallery():
     # Your existing code for uploading to the gallery
     pass
 
-#login 
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for("index"))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user)
-            flash("Login successful.", "success")
-            return redirect(url_for("index"))
-        else:
-            flash("Invalid email or password.", "danger")
-    return render_template("login.html", form=form)
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for("index"))
-
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        # Create the user object
-        user = User(username=form.username.data, email=form.email.data)
-
-        # ✅ Set the hashed password
-        user.set_password(form.password.data)
-
-        # Add and commit to database
-        db.session.add(user)
-        db.session.commit()
-
-        flash("Account created. Please log in.", "success")
-        return redirect(url_for("login"))
-        
-    return render_template("register.html", form=form)
-
-
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    flash("You have been logged out.", "info")
-    return redirect(url_for("index"))
 
 
 # Ensure the uploads directory exists
@@ -229,6 +223,39 @@ def reply(thread_id):
     save_threads(threads)
     return redirect(url_for('view_thread', thread_id=thread_id))
 
+# login removed
+def login():
+    if request.method == 'POST':
+        identifier = request.form['identifier']
+        password = request.form['password']
+        for user in load_users():
+            if user['username'] == identifier or user['email'] == identifier:
+                if check_password_hash(user['password'], password):
+                    session['username'] = user['username']
+                    return redirect(url_for('forum'))
+        flash('Invalid login.')
+    return render_template('login.html')
+
+# register removed
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = generate_password_hash(request.form['password'])
+        users = load_users()
+        if any(u['username'] == username or u['email'] == email for u in users):
+            flash('User already exists.')
+            return redirect(url_for('register'))
+        users.append({'username': username, 'email': email, 'password': password})
+        save_users(users)
+        flash('Registration successful.')
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+# logout removed
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('index'))
 
 @app.route('/chickens')
 def chickens():
@@ -264,13 +291,25 @@ def camps():
 def forum_static(filename):
     return send_from_directory(app.static_folder, filename) 
 
-print("Registered endpoints:")
-for rule in app.url_map.iter_rules():
-    print(rule.endpoint, "->", rule)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
 
+from wtforms import PasswordField, SubmitField
+from wtforms.validators import DataRequired, EqualTo
+from werkzeug.security import generate_password_hash
 
+class PasswordChangeForm(FlaskForm):
+    new_password = PasswordField('New Password', validators=[DataRequired()])
+    confirm = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password')])
+    submit = SubmitField('Update Password')
 
+@app.route("/account", methods=["GET", "POST"])
+@login_required
+def account():
+    form = PasswordChangeForm()
+    if form.validate_on_submit():
+        current_user.password_hash = generate_password_hash(form.new_password.data)
+        db.session.commit()
+        flash("Password updated successfully!", "success")
+    return render_template("account.html", form=form)

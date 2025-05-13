@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="container">
+  <h2>Account Settings</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash {{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+    {{ form.hidden_tag() }}
+    <p>{{ form.new_password.label }}<br>{{ form.new_password() }}</p>
+    <p>{{ form.confirm.label }}<br>{{ form.confirm() }}</p>
+    <p>{{ form.submit() }}</p>
+  </form>
+</main>
+{% endblock %}
