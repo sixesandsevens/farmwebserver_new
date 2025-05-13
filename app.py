@@ -16,9 +16,6 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from forms import RegistrationForm, LoginForm  # Adjust import based on your project structure
-from models import User  # ✅ This is the correct import
-from forms import RegistrationForm, LoginForm
 from models import db, User
 
 app = Flask(__name__)
@@ -26,7 +23,11 @@ app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:Absolute9497@sixesandsevens.mysql.pythonanywhere-services.com'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db.init_app(app)
+
+from models import User
+from forms import RegistrationForm, LoginForm
 
 
 
