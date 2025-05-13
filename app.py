@@ -18,12 +18,14 @@ from app import User  # Adjust import based on your project structure
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from forms import RegistrationForm, LoginForm  # Adjust import based on your project structure
-
+from models import db  # Import db from models
+from models import User  # ✅ if User is in models.py
+from forms import RegistrationForm, LoginForm
 
 app = Flask(__name__)
 app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # Replace with a secure key
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://username:Absolute9497@sixesandsevens.mysql.pythonanywhere-services.com'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://sixesandsevens:Absolute9497@sixesandsevens.mysql.pythonanywhere-services.com'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
