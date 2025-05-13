@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container new-thread">
+  <h1>Create New Thread</h1>
+  <form method="POST" action="{{ url_for('new_thread') }}" onsubmit="tinymce.triggerSave()">
+    <label>Title:<br>
+      <input type="text" name="title" required>
+    </label><br>
+    <label>Your Name:<br>
+      <input type="text" name="author" required>
+    </label><br>
+
+    <label>Content:<br>
+      <textarea id="post-content" name="content"></textarea>
+    </label><br>
+
+    <div class="manual-upload">
+      <h4>Upload an Image</h4>
+      <input type="file" id="imageUploadInput">
+      <button type="button" onclick="uploadImageManually()">Upload & Insert</button>
+    </div><br>
+
+    <button type="submit">Post Thread</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <!-- 1) Load TinyMCE -->
+  <script src="{{ url_for('static', filename='tinymce/tinymce.min.js') }}"></script>
+
+  <!-- 2) Initialize TinyMCE with your upload handler -->
+  <script>
+    tinymce.init({
+      selector: '#post-content',
+      license_key: 'gpl',
+      skin: 'oxide-dark',
+      content_css: 'dark',
+      plugins: 'image link code lists',
+      toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | image | code',
+      automatic_uploads: true,
+      paste_data_images: true,
+      images_upload_handler: function (blobInfo, success, failure) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload-image');
+        xhr.onload = function () {
+          if (xhr.status !== 200) return failure('HTTP Error: ' + xhr.status);
+          try {
+            var json = JSON.parse(xhr.responseText);
+            if (json.error)   return failure(json.error);
+            if (!json.location) return failure('No location returned');
+            success(json.location);
+          } catch (e) {
+            return failure('Invalid JSON: ' + e.message);
+          }
+        };
+        var fd = new FormData();
+        fd.append('file', blobInfo.blob(), blobInfo.filename());
+        xhr.send(fd);
+      }
+    });
+  </script>
+
+  <!-- 3) Your manual-upload helper -->
+  <script>
+    function uploadImageManually() {
+      var input = document.getElementById('imageUploadInput');
+      if (!input.files.length) return alert('Select a file first.');
+      var fd = new FormData();
+      fd.append('file', input.files[0]);
+
+      fetch('/upload-image', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(json => {
+          if (json.error)   return alert('Upload failed: ' + json.error);
+          if (!json.location) return alert('Upload failed: no location');
+          tinymce.activeEditor.execCommand(
+            'mceInsertContent', false,
+            `<img src="${json.location}" alt="uploaded image">`
+          );
+          tinymce.triggerSave();
+        })
+        .catch(err => alert('Upload error: ' + err));
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container forum-index">
+  <h1 class="forum-title">Farm Forum</h1>
+  <div class="forum-header">
+    <a class="new-thread-button" href="{{ url_for('new_thread') }}">+ Start New Thread</a>
+  </div>
+
+  <table class="forum-table">
+    <thead>
+      <tr>
+        <th class="icon-col"></th>
+        <th>Topic</th>
+        <th>Author</th>
+        <th>Replies</th>
+        <th>Last Post</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for thread in threads %}
+      <tr class="forum-row">
+        <td class="icon-col">📝</td>
+        <td>
+          <div class="thread-cell">
+            <a class="thread-link" href="{{ url_for('view_thread', thread_id=thread.id) }}">{{ thread.title }}</a>
+            <div class="thread-meta">
+              <span class="meta-author">Started by {{ thread.author }}</span>
+              {% if thread.timestamp %}<span class="meta-time">on {{ thread.timestamp }}</span>{% endif %}
+            </div>
+          </div>
+        </td>
+        <td>{{ thread.author }}</td>
+        <td>{{ thread.posts | length - 1 }}</td>
+        <td>
+          {% set last_post = thread.posts[-1] %}
+          {{ last_post.author }}<br>
+          {% if last_post.timestamp %}<small>{{ last_post.timestamp }}</small>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">No threads yet. Be the first to post!</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='tinymce/tinymce.min.js') }}"></script>
+{% endblock %}

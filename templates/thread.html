@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container thread-view">
+  <h1 class="thread-title">{{ thread.title }}</h1>
+  <div class="thread-posts">
+    {% for post in thread.posts %}
+    <div class="post-box">
+      <div class="post-header">
+        <strong>{{ post.author }}</strong>
+        {% if post.timestamp %}<span class="post-timestamp"> — {{ post.timestamp }}</span>{% endif %}
+      </div>
+      <div class="post-body">
+        {{ post.content | safe }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <form method="POST" action="{{ url_for('reply', thread_id=thread.id) }}" onsubmit="tinymce.triggerSave()">
+    <h3>Reply</h3>
+    <label>Your Name: <input type="text" name="author" required></label><br>
+    <textarea id="post-content" name="content"></textarea><br>
+
+    <div class="manual-upload">
+      <h4>Upload an Image</h4>
+      <input type="file" id="imageUploadInput">
+      <button type="button" onclick="uploadImageManually()">Upload &amp; Insert</button>
+    </div>
+
+    <button type="submit">Submit Reply</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='tinymce/tinymce.min.js') }}"></script>
+<script>
+  // Initialize TinyMCE
+  tinymce.init({
+    selector: '#post-content',
+    license_key: 'gpl',
+    skin: 'oxide-dark',
+    content_css: 'dark',
+    plugins: 'image link code lists',
+    toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | image | code',
+    automatic_uploads: true,
+    paste_data_images: true,
+    images_upload_handler: function(blobInfo, success, failure) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload-image');
+      xhr.onload = function() {
+        if (xhr.status !== 200) return failure('HTTP Error: ' + xhr.status);
+        try {
+          var json = JSON.parse(xhr.responseText);
+          if (json.error) return failure(json.error);
+          if (!json.location) return failure('No location returned');
+          success(json.location);
+        } catch (e) {
+          return failure('Invalid JSON: ' + e.message);
+        }
+      };
+      var formData = new FormData();
+      formData.append('file', blobInfo.blob(), blobInfo.filename());
+      xhr.send(formData);
+    }
+  });
+
+  // Manual upload helper
+  function uploadImageManually() {
+    var input = document.getElementById('imageUploadInput');
+    if (!input.files.length) return alert('Select a file first.');
+    var formData = new FormData();
+    formData.append('file', input.files[0]);
+    fetch('/upload-image', { method: 'POST', body: formData })
+      .then(function(response) { return response.json(); })
+      .then(function(json) {
+        if (json.error) return alert('Upload failed: ' + json.error);
+        if (!json.location) return alert('Upload failed: no location returned');
+        tinymce.activeEditor.execCommand(
+          'mceInsertContent', false,
+          '<img src="' + json.location + '" alt="uploaded image">'
+        );
+        tinymce.triggerSave();
+      })
+      .catch(function(err) { alert('Upload error: ' + err); });
+  }
+</script>
+{% endblock %}
