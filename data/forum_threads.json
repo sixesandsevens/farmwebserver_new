@@ -1,0 +1,20 @@
+[
+  {
+    "id": "3cd50e61-8c67-4ef4-acde-5c39d5269170",
+    "title": "The first post.",
+    "author": "Test",
+    "timestamp": "May 13, 2025 at 01:30 AM",
+    "posts": [
+      {
+        "author": "Test",
+        "content": "<p>This is a test post. To see if this still works. <img src=\"../static/uploads/IMG_0651.jpg\" alt=\"uploaded image\"></p>",
+        "timestamp": "May 13, 2025 at 01:30 AM"
+      },
+      {
+        "author": "whaleshit",
+        "content": "<p>It looks like everything still works. <img src=\"../../static/uploads/IMG_0186.jpg\" alt=\"uploaded image\"></p>",
+        "timestamp": "May 13, 2025 at 01:31 AM"
+      }
+    ]
+  }
+]

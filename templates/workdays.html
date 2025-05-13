@@ -1,5 +1,48 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>Community workdays schedule coming soon.</p>
+<main class="container">
+  <h1 class="page-title">Community Work Days</h1>
+
+  <!-- Calendar container -->
+  <div id="calendar" class="calendar-wrapper" style="height: 800px; margin-bottom: 2rem;"></div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+
+  <!-- Toast UI Calendar CSS -->
+  <link rel="stylesheet" href="https://uicdn.toast.com/calendar/2.6.0/toastui-calendar.min.css" />
+  <link rel="stylesheet" href="https://uicdn.toast.com/tui.date-picker/latest/tui-date-picker.min.css" />
+  <link rel="stylesheet" href="https://uicdn.toast.com/tui.time-picker/latest/tui-time-picker.min.css" />
+
+  <!-- Toast UI Calendar JS (WORKING version) -->
+  <script src="https://uicdn.toast.com/tui.date-picker/latest/tui-date-picker.min.js"></script>
+  <script src="https://uicdn.toast.com/tui.time-picker/latest/tui-time-picker.min.js"></script>
+  <script src="https://uicdn.toast.com/calendar/2.6.0/toastui-calendar.min.js"></script>
+
+  <!-- Calendar Initialization -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendar = new toastui.Calendar('#calendar', {
+        defaultView: 'month',
+        usageStatistics: false,
+        timezone: {
+          zones: [{ timezoneName: 'UTC' }],
+        },
+      });
+
+      calendar.createEvents([
+        {
+          id: '1',
+          calendarId: 'workdays',
+          title: 'Test Workday',
+          category: 'time',
+          start: '2025-05-15T10:00:00',
+          end: '2025-05-15T14:00:00'
+        }
+      ]);
+    });
+  </script>
 {% endblock %}
