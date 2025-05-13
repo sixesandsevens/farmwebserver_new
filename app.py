@@ -236,21 +236,32 @@ def login():
         flash('Invalid login.')
     return render_template('login.html')
 
-# register removed
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = generate_password_hash(request.form['password'])
-        users = load_users()
-        if any(u['username'] == username or u['email'] == email for u in users):
-            flash('User already exists.')
-            return redirect(url_for('register'))
-        users.append({'username': username, 'email': email, 'password': password})
-        save_users(users)
-        flash('Registration successful.')
-        return redirect(url_for('login'))
-    return render_template('register.html')
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        existing_user = User.query.filter_by(username=form.username.data).first()
+        existing_email = User.query.filter_by(email=form.email.data).first()
+
+        if existing_user:
+            flash("That username is already taken. Please choose another one.", "danger")
+            return render_template("register.html", form=form)
+
+        if existing_email:
+            flash("That email is already registered. Please use a different one.", "danger")
+            return render_template("register.html", form=form)
+
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash("Registration successful. Please log in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register.html", form=form)
+
 
 # logout removed
 def logout():
