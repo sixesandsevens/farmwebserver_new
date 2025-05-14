@@ -177,12 +177,12 @@ def gallery():
 @login_required
 def upload_to_gallery():
     
-@app.route('/gallery/upload', methods=['GET','POST'])
-@login_required
-def upload_to_gallery():
-    if request.method == 'POST':
+    @app.route('/gallery/upload', methods=['GET','POST'])
+    @login_required
+    def upload_to_gallery():
+        if request.method == 'POST':
         # Check if a file is included in the request
-        file = request.files.get('image')
+            file = request.files.get('image')
         if file:
             # Make sure it's a valid image
             if file and allowed_file(file.filename):
