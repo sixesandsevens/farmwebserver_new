@@ -35,8 +35,8 @@ app.config.update({
     'MAIL_SERVER': 'smtp.gmail.com',         # your SMTP server (Gmail in this example)
     'MAIL_PORT': 587,                        # TLS port
     'MAIL_USE_TLS': True,                    # enable TLS encryption
-    'MAIL_USERNAME': 'your.email@gmail.com', # sender account username
-    'MAIL_PASSWORD': 'your-email-password',  # sender account password (or use env var)
+    'MAIL_USERNAME': 'chris.tanton86@gmail.com', # sender account username
+    'MAIL_PASSWORD': 'cqcx wqpr ssaq dxsc',  # sender account password (or use env var)
     'MAIL_DEFAULT_SENDER': (                 # tuple(display name, email)
         'Farm Webserver',
         'your.email@gmail.com'
