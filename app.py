@@ -94,7 +94,7 @@ mail = Mail(app)
 
 
 
-UPLOAD_FOLDER=os.path.join(app.static_folder, 'uploads'),
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 
 MAX_CONTENT_LENGTH=16 * 1024 * 1024
 
