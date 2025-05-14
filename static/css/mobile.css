@@ -1,0 +1,57 @@
+/* mobile.css – Mobile‑first styles */
+
+/* Hide nav links & show toggle by default */
+.nav-links {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav-toggle {
+  display: block;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* Make images and widgets fluid */
+img,
+.calendar-wrapper,
+.gallery img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Open state when hamburger clicked */
+.nav-links.open {
+  display: block;
+}
+
+/* Responsive container helper */
+.responsive-container {
+  width: 100%;
+  padding: 0 1rem;
+}
+
+/* Larger screens (tablet+) */
+@media (min-width: 768px) {
+  .nav-toggle {
+    display: none;
+  }
+  .nav-links {
+    display: flex;
+    gap: 1rem;
+  }
+
+  /* two‑column layouts */
+  .two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .responsive-container {
+    padding: 0 2rem;
+  }
+}

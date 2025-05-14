@@ -1,11 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>{% block title %}Farm Info{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% block title %}Farm Info{% endblock %}</title>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Mobile overrides -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
 </head>
 <body>
-    <nav>
+  <nav class="navbar">
+    <!-- Hamburger toggle (mobile) -->
+    <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">☰</button>
+
+    <!-- All links hidden by default on mobile, shown on desktop or when toggled -->
+    <div class="nav-links">
       <div class="nav-main">
         <a href="/">Home</a>
         <a href="/disorientation">Disorientation Guide</a>
@@ -28,10 +40,14 @@
           <a href="{{ url_for('register') }}">Register</a>
         {% endif %}
       </div>
-    </nav>
-    
-    {% block content %}{% endblock %}
-    
-    {% block scripts %}{% endblock %}
+    </div>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  {% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/mobile.js') }}"></script>
+  {% endblock %}
 </body>
 </html>
