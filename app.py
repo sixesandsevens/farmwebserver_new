@@ -43,6 +43,9 @@ app.config.update({
     )
 })
 
+# ← This binds the extension to your app immediately
+mail = Mail(app)
+
 UPLOAD_FOLDER=os.path.join(app.static_folder, 'uploads'),
 MAX_CONTENT_LENGTH=16 * 1024 * 1024
 
