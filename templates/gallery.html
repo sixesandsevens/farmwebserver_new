@@ -72,3 +72,12 @@
     }
 </script>
 {% endblock %}
+
+<!-- Upload Form below the gallery -->
+<div class="upload-form-container" style="margin-top: 20px; text-align: center;">
+    <h3>Upload a New Image</h3>
+    <form action="/gallery/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="image" required>
+        <button type="submit">Upload</button>
+    </form>
+</div>
