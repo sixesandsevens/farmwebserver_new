@@ -47,7 +47,7 @@ app.config.update({
 # ← This binds the extension to your app immediately
 mail = Mail(app)
 
-UPLOAD_FOLDER=os.path.join(app.static_folder, 'uploads'),
+UPLOAD_FOLDER = os.path.join(app.static_folder, 'uploads')
 MAX_CONTENT_LENGTH=16 * 1024 * 1024
 
 # initialise extensions
@@ -174,27 +174,24 @@ def gallery():
     return render_template('gallery.html', images=images)
 
 
-@app.route('/gallery/upload', methods=['GET','POST'])
+# Removed the incomplete @app.route decorator
+# Removed duplicate route definition
+@app.route('/gallery/upload', methods=['GET', 'POST'])
 @login_required
 def upload_to_gallery():
-    
-    @app.route('/gallery/upload', methods=['GET','POST'])
-    @login_required
-    def upload_to_gallery():
-        if request.method == 'POST':
+    if request.method == 'POST':
         # Check if a file is included in the request
-            file = request.files.get('image')
+        file = request.files.get('image')
         if file:
             # Make sure it's a valid image
-            if file and allowed_file(file.filename):
+            if allowed_file(file.filename):
                 # Secure the filename
                 filename = secure_filename(file.filename)
                 # Save the file to the uploads folder
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
-                
-                # Optionally, you can save the file path in a database or JSON to keep track of the images
-                # Example: update a gallery JSON file with the new image's filename
+
+                # Optionally, save the file path in a database or JSON to keep track of the images
                 with open('data/gallery.json', 'r+') as gallery_file:
                     gallery_data = json.load(gallery_file)
                     gallery_data.append(filename)
@@ -207,10 +204,10 @@ def upload_to_gallery():
         else:
             flash('No image file selected.', 'error')
 
-    return redirect(url_for('gallery'))
+# Removed duplicate and misplaced code block
 
-    pass
 
+# Removed duplicate definition of allowed_file
 
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
@@ -279,7 +276,7 @@ def reply(thread_id):
     return redirect(url_for('view_thread', thread_id=thread_id))
 
 # dirty fix for image uploads
-app.route('/forum/static/<path:filename>')
+@app.route('/forum/static/<path:filename>')
 def forum_static(filename):
     return send_from_directory(app.static_folder, filename)
 
@@ -312,9 +309,19 @@ def camps():
     return render_template('camps.html')
 
 
+import logging
+
 if __name__ == '__main__':
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    app.logger.setLevel(logging.INFO)
+
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            app.logger.info("Database tables created successfully.")
+        except Exception as e:
+            app.logger.error(f"Error creating database tables: {e}")
     app.run(debug=True)
 
 
