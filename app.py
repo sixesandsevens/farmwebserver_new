@@ -354,15 +354,15 @@ def upload_to_gallery():
 
     
 
-@login_required
+    @login_required
 
-def upload_to_gallery():
+    def upload_to_gallery():
 
-    if request.method == 'POST':
+        if request.method == 'POST':
 
         # Check if a file is included in the request
 
-        file = request.files.get('image')
+            file = request.files.get('image')
 
         if file:
 
