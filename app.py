@@ -238,7 +238,7 @@ def login():
 
 @app.route('/logout')
 
-@login_required
+#@login_required
 
 def logout():
 
@@ -252,7 +252,7 @@ def logout():
 
 @app.route('/account', methods=['GET','POST'])
 
-@login_required
+#@login_required
 
 def account():
 
@@ -348,13 +348,13 @@ def gallery():
 
 
 
-@login_required
+#@login_required
 
 def upload_to_gallery():
 
     
 
-    @login_required
+    #@login_required
 
     def upload_to_gallery():
 
@@ -456,7 +456,7 @@ def forum():
 
 @app.route('/forum/post', methods=['GET','POST'])
 
-@login_required
+#@login_required
 
 def post_to_forum():
 
@@ -640,7 +640,7 @@ def allowed_file(filename):
 
 
 @app.route('/gallery/upload', methods=['GET','POST'])
-@login_required
+#@login_required
 def upload_to_gallery():
     if request.method == 'POST':
         file = request.files.get('image')
