@@ -1,7 +1,8 @@
 # forms.py
 from flask_wtf import FlaskForm
-from wtforms     import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from wtforms     import StringField, PasswordField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
+
 
 from models import User
 
@@ -32,3 +33,9 @@ class PasswordChangeForm(FlaskForm):
                                  validators=[DataRequired(), EqualTo('new_password',
                                        message="Passwords must match")])
     submit       = SubmitField('Update Password')
+
+class FeedbackForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(max=50)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    message = TextAreaField('Message', validators=[DataRequired(), Length(max=2000)])
+    submit = SubmitField('Send Feedback')

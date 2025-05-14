@@ -15,6 +15,11 @@ from flask_login       import (
 from models import db, User
 from forms  import RegistrationForm, LoginForm, PasswordChangeForm
 
+from flask import render_template, flash, redirect, url_for, current_app
+from flask_mail import Mail, Message
+from forms import FeedbackForm
+
+
 app = Flask(__name__)
 app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # replace with a real one
@@ -26,6 +31,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 )
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.update({
+    'MAIL_SERVER': 'smtp.gmail.com',         # your SMTP server (Gmail in this example)
+    'MAIL_PORT': 587,                        # TLS port
+    'MAIL_USE_TLS': True,                    # enable TLS encryption
+    'MAIL_USERNAME': 'your.email@gmail.com', # sender account username
+    'MAIL_PASSWORD': 'your-email-password',  # sender account password (or use env var)
+    'MAIL_DEFAULT_SENDER': (                 # tuple(display name, email)
+        'Farm Webserver',
+        'your.email@gmail.com'
+    )
+})
 
 UPLOAD_FOLDER=os.path.join(app.static_folder, 'uploads'),
 MAX_CONTENT_LENGTH=16 * 1024 * 1024
@@ -114,6 +130,26 @@ def account():
         db.session.commit()
         flash("Password updated.", "success")
     return render_template('account.html', form=form)
+
+#mail
+
+@app.route('/feedback', methods=['GET', 'POST'])
+def feedback():
+    form = FeedbackForm()
+    if form.validate_on_submit():
+        msg = Message(
+            subject=f"New Feedback from {form.name.data}",
+            recipients=['chris.tanton86@gmail.com']   # where you want to receive feedback
+        )
+        msg.body = (
+            f"Name: {form.name.data}\n"
+            f"Email: {form.email.data}\n\n"
+            f"Message:\n{form.message.data}"
+        )
+        mail.send(msg)
+        flash('Thank you for your feedback!', 'success')
+        return redirect(url_for('feedback'))
+    return render_template('feedback.html', form=form)
 
 
 # ---- FORUM / GALLERY / UPLOAD ----
