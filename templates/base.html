@@ -6,17 +6,12 @@
 
   <title>{% block title %}Farm Info{% endblock %}</title>
 
-  <!-- Main stylesheet -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <!-- Mobile overrides -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
 </head>
 <body>
   <nav class="navbar">
-    <!-- Hamburger toggle (mobile) -->
     <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">☰</button>
-
-    <!-- All links hidden by default on mobile, shown on desktop or when toggled -->
     <div class="nav-links">
       <div class="nav-main">
         <a href="/">Home</a>
@@ -46,7 +41,7 @@
   {% block content %}{% endblock %}
 
   {% block scripts %}
-    {{ super() }}
+    <!-- only your base‐level scripts here -->
     <script src="{{ url_for('static', filename='js/mobile.js') }}"></script>
   {% endblock %}
 </body>
