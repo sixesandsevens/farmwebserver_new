@@ -19,8 +19,16 @@ from flask import render_template, flash, redirect, url_for, current_app
 from flask_mail import Mail, Message
 from forms import FeedbackForm
 
-
 app = Flask(__name__)
+
+GALLERY_JSON = os.path.join(app.root_path, 'data', 'gallery.json')
+
+os.makedirs(os.path.dirname(GALLERY_JSON), exist_ok=True)
+if not os.path.isfile(GALLERY_JSON):
+    with open(GALLERY_JSON, 'w') as f:
+        json.dump([], f)
+
+
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # replace with a real one
@@ -174,28 +182,26 @@ def gallery():
     return render_template('gallery.html', images=images)
 
 
-# Removed the incomplete @app.route decorator
-# Removed duplicate route definition
-@app.route('/gallery/upload', methods=['GET','POST'])
-#@login_required
+
+@app.route('/gallery/upload', methods=['POST'])
+@login_required
 def upload_to_gallery():
-    if request.method == 'POST':
-        file = request.files.get('file')
-        if file:
-            if allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-                with open('data/gallery.json', 'r+') as gallery_file:
-                    gallery_data = json.load(gallery_file)
-                    gallery_data.append(filename)
-                    gallery_file.seek(0)
-                    json.dump(gallery_data, gallery_file)
-                flash('Image uploaded successfully!', 'success')
-            else:
-                flash('Invalid image file. Please upload a valid image.', 'error')
-        else:
-            flash('No image file selected.', 'error')
+    file = request.files.get('file')
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        # Now load-and-update your JSON
+        with open(GALLERY_JSON, 'r+') as gallery_file:
+            data = json.load(gallery_file)
+            data.append(filename)
+            gallery_file.seek(0)
+            json.dump(data, gallery_file)
+
+        flash('Image uploaded successfully!', 'success')
+    else:
+        flash('Please select a valid image.', 'error')
+
     return redirect(url_for('gallery'))
 
 
