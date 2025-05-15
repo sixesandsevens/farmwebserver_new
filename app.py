@@ -1,6 +1,10 @@
 # app.py
-from dotenv import load_dotenv
-load_dotenv()    # reads a .env file in your project root
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()    # only in dev, if python-dotenv is installed
+except ImportError:
+    pass             # on PA this skips loading .env
 
 import os, json, uuid
 from datetime import datetime
