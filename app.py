@@ -1,4 +1,7 @@
 # app.py
+from dotenv import load_dotenv
+load_dotenv()    # reads a .env file in your project root
+
 import os, json, uuid
 from datetime import datetime
 from flask import (
@@ -34,26 +37,23 @@ if not os.path.isfile(GALLERY_JSON) or os.path.getsize(GALLERY_JSON) == 0:
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.secret_key = 'dev'
-app.config['SECRET_KEY'] = 'your_secret_key'  # replace with a real one
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    'mysql+pymysql://'
-    'sixesandsevens:absolute9497@'                           # your PA username & password
-    'sixesandsevens.mysql.pythonanywhere-services.com/'      # <— note the trailing slash!
-    'sixesandsevens$default'                                 # your actual database name
-)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Feedback mail form
+
 app.config.update({
-    'MAIL_SERVER': 'smtp.gmail.com',         # your SMTP server (Gmail in this example)
-    'MAIL_PORT': 587,                        # TLS port
-    'MAIL_USE_TLS': True,                    # enable TLS encryption
-    'MAIL_USERNAME': 'chris.tanton86@gmail.com', # sender account username
-    'MAIL_PASSWORD': 'cqcx wqpr ssaq dxsc',  # sender account password (or use env var)
-    'MAIL_DEFAULT_SENDER': (                 # tuple(display name, email)
-        'Farm Webserver',
-        'your.email@gmail.com'
+    'MAIL_SERVER':   os.environ.get('MAIL_SERVER',   'smtp.gmail.com'),
+    'MAIL_PORT':     int(os.environ.get('MAIL_PORT',     587)),
+    'MAIL_USE_TLS':  os.environ.get('MAIL_USE_TLS',  'True') == 'True',
+    'MAIL_USERNAME': os.environ.get('MAIL_USERNAME'),
+    'MAIL_PASSWORD': os.environ.get('MAIL_PASSWORD'),
+    'MAIL_DEFAULT_SENDER': (
+        os.environ.get('MAIL_SENDER_NAME', 'Farm Webserver'),
+        os.environ.get('MAIL_SENDER_EMAIL','your.email@gmail.com')
     )
 })
+
 
 
 # Temporary—remove once you finish debugging
