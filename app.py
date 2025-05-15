@@ -198,10 +198,8 @@ def upload_to_gallery():
             flash('No image file selected.', 'error')
     return redirect(url_for('gallery'))
 
-# Removed duplicate and misplaced code block
 
-
-# Removed duplicate definition of allowed_file
+# TinyMCE Image Upload
 
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
