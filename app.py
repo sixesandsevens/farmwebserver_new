@@ -58,7 +58,7 @@ app.config.update({
 
 # Temporary—remove once you finish debugging
 @app.route('/debug-gallery')
-@login_required
+#@login_required
 def debug_gallery():
     # absolute paths
     gallery_dir = os.path.join(app.root_path, 'static', 'gallery')
