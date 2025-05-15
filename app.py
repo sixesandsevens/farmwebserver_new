@@ -28,6 +28,9 @@ if not os.path.isfile(GALLERY_JSON):
     with open(GALLERY_JSON, 'w') as f:
         json.dump([], f)
 
+app.config['GALLERY_FOLDER'] = os.path.join(app.static_folder, 'gallery')
+os.makedirs(app.config['GALLERY_FOLDER'], exist_ok=True)
+
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.secret_key = 'dev'
@@ -189,13 +192,15 @@ def upload_to_gallery():
     file = request.files.get('file')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        target = os.path.join(app.config['GALLERY_FOLDER'], filename)
+        file.save(target)    # ← saves into static/gallery/
 
-        # Now load-and-update your JSON
+        # now append to JSON
         with open(GALLERY_JSON, 'r+') as gallery_file:
             data = json.load(gallery_file)
             data.append(filename)
             gallery_file.seek(0)
+            gallery_file.truncate()
             json.dump(data, gallery_file)
 
         flash('Image uploaded successfully!', 'success')
