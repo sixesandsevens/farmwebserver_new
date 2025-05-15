@@ -21,15 +21,15 @@ from forms import FeedbackForm
 
 app = Flask(__name__)
 
+# at top of app.py, after app = Flask(...)
 GALLERY_JSON = os.path.join(app.root_path, 'data', 'gallery.json')
-
+STATIC_GALLERY = os.path.join(app.static_folder, 'gallery')
 os.makedirs(os.path.dirname(GALLERY_JSON), exist_ok=True)
-if not os.path.isfile(GALLERY_JSON):
+os.makedirs(STATIC_GALLERY, exist_ok=True)
+# initialize JSON if missing or empty
+if not os.path.isfile(GALLERY_JSON) or os.path.getsize(GALLERY_JSON) == 0:
     with open(GALLERY_JSON, 'w') as f:
         json.dump([], f)
-
-app.config['GALLERY_FOLDER'] = os.path.join(app.static_folder, 'gallery')
-os.makedirs(app.config['GALLERY_FOLDER'], exist_ok=True)
 
 
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
@@ -173,35 +173,62 @@ def feedback():
 def index():
     return render_template('index.html')
 
+#gallery
 
 @app.route('/gallery')
 def gallery():
-    gallery_dir = os.path.join(app.static_folder, 'gallery')
-    images = []
-    if os.path.isdir(gallery_dir):
-        for fn in sorted(os.listdir(gallery_dir)):
-            if fn.lower().endswith(('.png','.jpg','.jpeg','.gif')):
-                images.append(url_for('static', filename=f'gallery/{fn}'))
+    try:
+        with open(GALLERY_JSON) as jf:
+            data = json.load(jf)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = []
+
+    # in case you still have old string‑only entries, migrate them:
+    if data and isinstance(data[0], str):
+        migrated = []
+        for fname in data:
+            path = os.path.join(STATIC_GALLERY, fname)
+            ts = datetime.utcfromtimestamp(os.path.getmtime(path)).isoformat() + "Z"
+            migrated.append({"filename": fname, "timestamp": ts})
+        data = sorted(migrated, key=lambda e: e['timestamp'])
+        with open(GALLERY_JSON, 'w') as jf:
+            json.dump(data, jf)
+
+    # Build URLs
+    images = [
+        {
+          "url": url_for('static', filename=f'gallery/{item["filename"]}'),
+          "timestamp": item["timestamp"]
+        }
+        for item in data
+    ]
     return render_template('gallery.html', images=images)
 
 
 
 @app.route('/gallery/upload', methods=['POST'])
-#@login_required
+#login_required
 def upload_to_gallery():
     file = request.files.get('file')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        target = os.path.join(app.config['GALLERY_FOLDER'], filename)
-        file.save(target)    # ← saves into static/gallery/
+        file_path = os.path.join(STATIC_GALLERY, filename)
+        file.save(file_path)
 
-        # now append to JSON
-        with open(GALLERY_JSON, 'r+') as gallery_file:
-            data = json.load(gallery_file)
-            data.append(filename)
-            gallery_file.seek(0)
-            gallery_file.truncate()
-            json.dump(data, gallery_file)
+        # record upload time
+        entry = {
+            "filename": filename,
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+
+        # load, append, sort, then write back
+        with open(GALLERY_JSON, 'r+') as jf:
+            data = json.load(jf)
+            data.append(entry)
+            # sort oldest→newest; use reverse=True for newest-first
+            data.sort(key=lambda e: e['timestamp'])
+            jf.seek(0); jf.truncate()
+            json.dump(data, jf)
 
         flash('Image uploaded successfully!', 'success')
     else:
