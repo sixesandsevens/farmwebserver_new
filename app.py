@@ -232,7 +232,7 @@ def gallery():
 #gallery upload
 
 @app.route('/gallery/upload', methods=['POST'])
-@login_required
+#@login_required
 def upload_to_gallery():
     file = request.files.get('file')
     if file and allowed_file(file.filename):
