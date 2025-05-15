@@ -176,33 +176,27 @@ def gallery():
 
 # Removed the incomplete @app.route decorator
 # Removed duplicate route definition
-@app.route('/gallery/upload', methods=['GET', 'POST'])
-@login_required
+@app.route('/gallery/upload', methods=['GET','POST'])
+#@login_required
 def upload_to_gallery():
     if request.method == 'POST':
-        # Check if a file is included in the request
-        file = request.files.get('image')
+        file = request.files.get('file')
         if file:
-            # Make sure it's a valid image
             if allowed_file(file.filename):
-                # Secure the filename
                 filename = secure_filename(file.filename)
-                # Save the file to the uploads folder
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
-
-                # Optionally, save the file path in a database or JSON to keep track of the images
                 with open('data/gallery.json', 'r+') as gallery_file:
                     gallery_data = json.load(gallery_file)
                     gallery_data.append(filename)
                     gallery_file.seek(0)
                     json.dump(gallery_data, gallery_file)
-
                 flash('Image uploaded successfully!', 'success')
             else:
                 flash('Invalid image file. Please upload a valid image.', 'error')
         else:
             flash('No image file selected.', 'error')
+    return redirect(url_for('gallery'))
 
 # Removed duplicate and misplaced code block
 
