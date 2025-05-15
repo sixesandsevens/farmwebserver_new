@@ -193,23 +193,31 @@ def index():
 #gallery
 
 @app.route('/gallery')
+#@login_required
 def gallery():
-    try:
-        with open(GALLERY_JSON) as jf:
-            data = json.load(jf)
-    except (FileNotFoundError, json.JSONDecodeError):
-        data = []
+    # 1. List all valid image files
+    files = [
+        fn for fn in os.listdir(STATIC_GALLERY)
+        if allowed_file(fn)
+    ]
 
-    # in case you still have old string‑only entries, migrate them:
-    if data and isinstance(data[0], str):
-        migrated = []
-        for fname in data:
-            path = os.path.join(STATIC_GALLERY, fname)
-            ts = datetime.utcfromtimestamp(os.path.getmtime(path)).isoformat() + "Z"
-            migrated.append({"filename": fname, "timestamp": ts})
-        data = sorted(migrated, key=lambda e: e['timestamp'])
-        with open(GALLERY_JSON, 'w') as jf:
-            json.dump(data, jf)
+    # 2. Pair each filename with its mtime
+    files_with_time = []
+    for fn in files:
+        path = os.path.join(STATIC_GALLERY, fn)
+        mtime = os.path.getmtime(path)
+        files_with_time.append((fn, mtime))
+
+    # 3. Sort by mtime (oldest first; reverse=True for newest first)
+    files_with_time.sort(key=lambda ft: ft[1])
+
+    # 4. Build the URL list for your template
+    images = [
+        url_for('static', filename=f'gallery/{fn}')
+        for fn, _ in files_with_time
+    ]
+
+    return render_template('gallery.html', images=images)
 
     # Build URLs
     images = [
@@ -221,37 +229,21 @@ def gallery():
     ]
     return render_template('gallery.html', images=images)
 
-
+#gallery upload
 
 @app.route('/gallery/upload', methods=['POST'])
-#login_required
+@login_required
 def upload_to_gallery():
     file = request.files.get('file')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file_path = os.path.join(STATIC_GALLERY, filename)
-        file.save(file_path)
-
-        # record upload time
-        entry = {
-            "filename": filename,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
-        }
-
-        # load, append, sort, then write back
-        with open(GALLERY_JSON, 'r+') as jf:
-            data = json.load(jf)
-            data.append(entry)
-            # sort oldest→newest; use reverse=True for newest-first
-            data.sort(key=lambda e: e['timestamp'])
-            jf.seek(0); jf.truncate()
-            json.dump(data, jf)
-
+        target = os.path.join(STATIC_GALLERY, filename)
+        file.save(target)
         flash('Image uploaded successfully!', 'success')
     else:
         flash('Please select a valid image.', 'error')
-
     return redirect(url_for('gallery'))
+
 
 
 # TinyMCE Image Upload
