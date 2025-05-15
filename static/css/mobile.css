@@ -15,7 +15,7 @@
   top: 60px;              /* same height as your <nav> */
   left: 0;
   right: 0;
-  background: #8000007e;   /* same as your nav background */
+  background: #800000d2;   /* same as your nav background */
   flex-direction: column;  /* stack vertically when shown */
   padding: 0.5rem 0;       /* space around links */
   z-index: 999;
