@@ -1,38 +1,63 @@
-/* mobile.css – Mobile‑first styles */
-
-/* Hide nav links & show toggle by default */
-.nav-links {
-  display: none;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+/* make the hamburger icon red to match your links */
 .nav-toggle {
   display: block;
   background: none;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
+  color: #c40404;    /* ← red bar color */
 }
 
-/* Make images and widgets fluid */
-img,
-.calendar-wrapper,
-.gallery img {
-  max-width: 100%;
-  height: auto;
+/* hide the menu by default on mobile, then absolutely position it */
+.nav-links {
+  display: none;
+  position: absolute;     /* pull out of normal flow */
+  top: 60px;              /* same height as your <nav> */
+  left: 0;
+  right: 0;
+  background: #8000007e;   /* same as your nav background */
+  flex-direction: column;  /* stack vertically when shown */
+  padding: 0.5rem 0;       /* space around links */
+  z-index: 999;
 }
 
-/* Open state when hamburger clicked */
+/* when open, show as flex column */
 .nav-links.open {
-  display: block;
+  display: flex;
 }
 
-/* Responsive container helper */
-.responsive-container {
-  width: 100%;
-  padding: 0 1rem;
+/* stack both main & auth links in that mobile menu */
+.nav-main, .nav-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
 }
+
+/* override the absolute‑position from style.css */
+.nav-auth {
+  position: static;
+  transform: none;
+}
+
+/* keep the rest of your existing mobile.css media-query */
+@media (min-width: 768px) {
+  .nav-toggle {
+    display: none;
+  }
+  .nav-links {
+    position: static;
+    display: flex;
+    gap: 1rem;
+    background: none;
+    padding: 0;
+  }
+  .nav-main, .nav-auth {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
 
 /* Larger screens (tablet+) */
 @media (min-width: 768px) {
