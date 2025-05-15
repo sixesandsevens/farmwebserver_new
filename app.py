@@ -23,7 +23,7 @@ app = Flask(__name__)
 
 # at top of app.py, after app = Flask(...)
 GALLERY_JSON = os.path.join(app.root_path, 'data', 'gallery.json')
-STATIC_GALLERY = os.path.join(app.static_folder, 'gallery')
+STATIC_GALLERY = os.path.join(app.root_path, 'static', 'gallery')
 os.makedirs(os.path.dirname(GALLERY_JSON), exist_ok=True)
 os.makedirs(STATIC_GALLERY, exist_ok=True)
 # initialize JSON if missing or empty
