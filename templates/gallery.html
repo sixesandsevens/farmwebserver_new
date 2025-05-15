@@ -39,25 +39,25 @@
 </div>
 
 <script>
-    const images = {{ images|tojson }};
+    const galleryImages = JSON.parse('{{ images|tojson|safe }}'); // Ensure this is rendered as valid JSON by the template engine
     let currentIndex = 0;
     const mainImage = document.getElementById('mainImage');
 
     function showImage(src) {
-        currentIndex = images.indexOf(src);
+        currentIndex = galleryImages.indexOf(src);
         mainImage.src = src;
     }
 
     document.getElementById('prevBtn').addEventListener('click', (e) => {
         e.preventDefault();
-        currentIndex = (currentIndex - 1 + images.length) % images.length;
-        mainImage.src = images[currentIndex];
+        currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+        mainImage.src = galleryImages[currentIndex];
     });
 
     document.getElementById('nextBtn').addEventListener('click', (e) => {
         e.preventDefault();
-        currentIndex = (currentIndex + 1) % images.length;
-        mainImage.src = images[currentIndex];
+        currentIndex = (currentIndex + 1) % galleryImages.length;
+        mainImage.src = galleryImages[currentIndex];
     });
 
     function openFullscreen(src) {
@@ -76,7 +76,7 @@
 <!-- Upload Form below the gallery -->
 <div class="upload-form-container" style="margin-top: 20px; text-align: center;">
     <h3>Upload a New Image</h3>
-    <form action="/gallery/upload" method="POST" enctype="multipart/form-data">
+    <form action="{{ url_for('upload_to_gallery') }}" method="post" enctype="multipart/form-data">
         <input type="file" name="image" required>
         <button type="submit">Upload</button>
     </form>
