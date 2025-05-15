@@ -55,6 +55,23 @@ app.config.update({
     )
 })
 
+
+# Temporary—remove once you finish debugging
+@app.route('/debug-gallery')
+@login_required
+def debug_gallery():
+    # absolute paths
+    gallery_dir = os.path.join(app.root_path, 'static', 'gallery')
+    json_file  = os.path.join(app.root_path, 'data', 'gallery.json')
+
+    files = os.listdir(gallery_dir) if os.path.isdir(gallery_dir) else []
+    try:
+        data = json.load(open(json_file))
+    except Exception as e:
+        data = f"Error loading JSON: {e}"
+
+    return jsonify(files=files, json=data)
+
 # ← This binds the extension to your app immediately
 mail = Mail(app)
 
