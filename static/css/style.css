@@ -13,7 +13,7 @@ nav {
   align-items: center;
   height: 60px;
   padding: 0 1rem;
-+ overflow-x: hidden;    /* prevent jumbled overflow on tiny screens */
+overflow-x: hidden;    /* prevent jumbled overflow on tiny screens */
 }
 
 /* Center main nav links */
