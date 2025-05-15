@@ -127,14 +127,14 @@ def login():
 
 
 @app.route('/logout')
-@login_required
+#@login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
 
 @app.route('/account', methods=['GET','POST'])
-@login_required
+#login_required
 def account():
     form = PasswordChangeForm()
     if form.validate_on_submit():
@@ -184,7 +184,7 @@ def gallery():
 
 
 @app.route('/gallery/upload', methods=['POST'])
-@login_required
+#@login_required
 def upload_to_gallery():
     file = request.files.get('file')
     if file and allowed_file(file.filename):
@@ -225,7 +225,7 @@ def forum():
 
 
 @app.route('/forum/post', methods=['GET','POST'])
-@login_required
+#@login_required
 def post_to_forum():
     # your existing forum-post logic here
     pass
