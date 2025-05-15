@@ -77,7 +77,7 @@
 <div class="upload-form-container" style="margin-top: 20px; text-align: center;">
     <h3>Upload a New Image</h3>
     <form action="{{ url_for('upload_to_gallery') }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="image" required>
+        <input type="file" name="file" required>
         <button type="submit">Upload</button>
     </form>
 </div>
