@@ -150,7 +150,7 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        # look up by email (not username)
+        # look up by email (matches your LoginForm)
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
