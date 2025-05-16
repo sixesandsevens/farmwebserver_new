@@ -139,7 +139,6 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
-
 # ---- AUTH ROUTES ----
 
 @app.route('/register', methods=['GET', 'POST'])
