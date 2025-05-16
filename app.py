@@ -78,6 +78,28 @@ mail = Mail(app)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# … after you configure login_manager …
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# ─── LOCK EVERYTHING BEHIND AUTH ────────────────────────────────────────────────
+
+@app.before_request
+def require_login():
+    # endpoints that should be publicly accessible
+    public = {
+        'login', 'register',          # your auth pages
+        'static',                     # flask’s static assets
+        'favicon'                     # if you serve one
+    }
+    # If they’re not logged in and they’re not hitting a public endpoint, send them to /login
+    if not current_user.is_authenticated and request.endpoint not in public:
+        return redirect(url_for('login', next=request.url))
+
+# ─── your existing routes follow below… ────────────────────────────────────────
+
 # ─── YOUR EXISTING GALLERY, AUTH & FORUM ROUTES CONTINUE BELOW… ─────────────────
 
 GALLERY_JSON = os.path.join(app.root_path, 'data', 'gallery.json')
