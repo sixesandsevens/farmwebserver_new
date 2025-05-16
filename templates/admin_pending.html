@@ -2,14 +2,28 @@
 {% block content %}
   <h2>Pending User Approvals</h2>
   {% if users %}
-    <ul>
-      {% for u in users %}
-        <li>
-          {{ u.username }} &lt;{{ u.email }}&gt;
-          <a href="{{ url_for('approve_user', user_id=u.id) }}">Approve</a>
-        </li>
-      {% endfor %}
-    </ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Referred By</th>          <!-- new header -->
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.referrer or '-' }}</td>   <!-- new column -->
+            <td>
+              <a href="{{ url_for('approve_user', user_id=u.id) }}">Approve</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   {% else %}
     <p>No users pending approval.</p>
   {% endif %}

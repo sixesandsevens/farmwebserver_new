@@ -13,6 +13,10 @@
       {{ form.email(size=32) }}
     </div>
     <div>
+      {{ form.referrer.label }}<br>
+      {{ form.referrer() }}
+    </div>
+    <div>
       {{ form.password.label }}<br>
       {{ form.password(size=32) }}
     </div>

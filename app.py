@@ -208,6 +208,7 @@ def register():
         user = User(
             username=form.username.data,
             email=form.email.data,
+            referrer=form.referrer.data or None,
             approved=False      # ← ensure it’s unapproved
         )
         user.set_password(form.password.data)

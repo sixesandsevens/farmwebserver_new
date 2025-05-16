@@ -9,6 +9,7 @@ from models import User
 class RegistrationForm(FlaskForm):
     username         = StringField('Username', validators=[DataRequired()])
     email            = StringField('Email',    validators=[DataRequired(), Email()])
+    referrer         = StringField('Referred by', validators=[Length(max=120)])
     password         = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password',
                                      validators=[DataRequired(), EqualTo('password')])
