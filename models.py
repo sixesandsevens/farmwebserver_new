@@ -11,6 +11,8 @@ class User(UserMixin, db.Model):
     username      = db.Column(db.String(80), unique=True, nullable=False)
     email         = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(Text, nullable=False)
+    approved       = db.Column(db.Boolean, default=False, nullable=False)   # ← new
+    is_admin       = db.Column(db.Boolean, default=False, nullable=False)   # ← new
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

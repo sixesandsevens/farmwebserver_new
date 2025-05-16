@@ -30,10 +30,42 @@ from forms import (
 from PIL import Image
 import piexif
 from io import BytesIO
+from functools import wraps
+from flask import abort
+
+
 
 # ─── APP & CONFIG ───────────────────────────────────────────────────────────────
 
 app = Flask(__name__)
+
+#admin_required decorator
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not (current_user.is_authenticated and current_user.is_admin):
+            return abort(403)
+        return f(*args, **kwargs)
+    return decorated
+
+#aprove user
+
+@app.route('/admin/pending')
+@admin_required
+def pending_users():
+    users = User.query.filter_by(approved=False).all()
+    return render_template('admin_pending.html', users=users)
+
+
+@app.route('/admin/approve/<int:user_id>')
+@admin_required
+def approve_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.approved = True
+    db.session.commit()
+    flash(f'User {user.username!r} approved.', 'success')
+    return redirect(url_for('pending_users'))
 
 # SECRET_KEY must be set in the environment
 _secret = os.getenv('SECRET_KEY')
@@ -173,26 +205,32 @@ os.makedirs('data', exist_ok=True)
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            approved=False      # ← ensure it’s unapproved
+        )
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        login_user(user)
-        flash('Registration successful! You are now logged in.', 'success')
-        return redirect(url_for('account'))
+        flash('Thanks for signing up! Your account is pending approval.', 'info')
+        return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        # look up by email (matches your LoginForm)
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
-            flash('Logged in successfully.', 'success')
-            return redirect(request.args.get('next') or url_for('account'))
-        flash('Invalid email or password', 'danger')
+            if not user.approved:
+                flash('Your account is still awaiting approval.', 'warning')
+            else:
+                login_user(user)
+                flash('Logged in successfully.', 'success')
+                return redirect(url_for('account'))
+        else:
+            flash('Invalid email or password', 'danger')
     return render_template('login.html', form=form)
 
 @app.route('/logout')
