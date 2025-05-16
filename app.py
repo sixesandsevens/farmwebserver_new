@@ -46,6 +46,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     'sixesandsevens.mysql.pythonanywhere-services.com/'      # <— note the trailing slash!
     'sixesandsevens$default'                                 # your actual database name
 )
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280
+}
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config.update({
