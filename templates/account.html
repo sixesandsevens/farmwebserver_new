@@ -2,7 +2,7 @@
 {% block content %}
 <main class="container">
 
-  {# Admin Panel Section #}
+  {# ─── Admin Panel Section ────────────────────────────────────── #}
   {% if current_user.is_admin %}
     <section class="account-settings admin-panel">
       <h2>Admin Panel</h2>
@@ -13,7 +13,7 @@
     </section>
   {% endif %}
 
-  {# Account Settings Section #}
+  {# ─── Account Settings Section ───────────────────────────────── #}
   <section class="account-settings">
     <h2>Account Settings</h2>
 
@@ -29,9 +29,18 @@
 
     <form method="POST">
       {{ form.hidden_tag() }}
-      <p>{{ form.old_password.label }}<br>{{ form.old_password() }}</p>
-      <p>{{ form.new_password.label }}<br>{{ form.new_password() }}</p>
-      <p>{{ form.confirm.label }}<br>{{ form.confirm() }}</p>
+      <p>
+        {{ form.old_password.label }}<br>
+        {{ form.old_password() }}
+      </p>
+      <p>
+        {{ form.new_password.label }}<br>
+        {{ form.new_password() }}
+      </p>
+      <p>
+        {{ form.confirm.label }}<br>
+        {{ form.confirm() }}
+      </p>
       <p>{{ form.submit() }}</p>
     </form>
   </section>

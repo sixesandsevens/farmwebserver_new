@@ -130,3 +130,21 @@ a:hover {
   border-radius: 4px;
   margin-top: 10px;
 }
+/* Shared box style for both panels */
+.account-settings {
+  background-color: #222;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  margin-bottom: 2rem; /* space between boxes */
+}
+
+.account-settings h2 {
+  margin-top: 0;
+  color: #fff;
+}
+
+/* Optional: additional styling for the admin box */
+.admin-panel {
+  border: 1px solid #444;
+}
