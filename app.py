@@ -13,12 +13,14 @@ from flask import (
     Flask, render_template, request, redirect, url_for,
     flash, session, jsonify, send_from_directory
 )
+from app import mail
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, login_user, logout_user,
     login_required, current_user
 )
+from flask import current_app
 from flask_mail import Mail, Message
 
 from models import db, User
@@ -32,6 +34,8 @@ import piexif
 from io import BytesIO
 from functools import wraps
 from flask import abort
+
+
 
 
 
@@ -222,9 +226,27 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
+        # Send a notification to the admin
+        admin_addr = current_app.config.get('ADMIN_EMAIL')
+        if admin_addr:
+            msg = Message(
+                "🔔 New Pending Registration",
+                sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                recipients=[admin_addr]
+            )
+            msg.body = (
+                f"New user awaiting approval:\n\n"
+                f"Username: {user.username}\n"
+                f"Email:    {user.email}\n"
+                f"Referred by: {user.referrer or 'N/A'}\n\n"
+                f"Approve here: {url_for('approve_user', user_id=user.id, _external=True)}"
+            )
+            mail.send(msg)
         flash('Thanks for signing up! Your account is pending approval.', 'info')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
+
+#Login
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
