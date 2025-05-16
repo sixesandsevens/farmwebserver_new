@@ -57,6 +57,14 @@ def pending_users():
     users = User.query.filter_by(approved=False).all()
     return render_template('admin_pending.html', users=users)
 
+@app.route('/admin/decline/<int:user_id>')
+@admin_required
+def decline_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'User {user.username!r} has been declined and removed.', 'warning')
+    return redirect(url_for('pending_users'))
 
 @app.route('/admin/approve/<int:user_id>')
 @admin_required
