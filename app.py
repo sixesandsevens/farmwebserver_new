@@ -221,14 +221,16 @@ def register():
             username=form.username.data,
             email=form.email.data,
             referrer=form.referrer.data or None,
-            approved=False      # ← ensure it’s unapproved
+            approved=False
         )
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        # Send a notification to the admin
+
+        # Notify admin via email
         admin_addr = current_app.config.get('ADMIN_EMAIL')
         if admin_addr:
+            approve_url = url_for('approve_user', user_id=user.id, _external=True)
             msg = Message(
                 "🔔 New Pending Registration",
                 sender=current_app.config['MAIL_DEFAULT_SENDER'],
@@ -239,11 +241,18 @@ def register():
                 f"Username: {user.username}\n"
                 f"Email:    {user.email}\n"
                 f"Referred by: {user.referrer or 'N/A'}\n\n"
-                f"Approve here: {url_for('approve_user', user_id=user.id, _external=True)}"
+                f"Approve here: {approve_url}"
+            )
+            msg.html = render_template(
+                'emails/pending_user.html',
+                user=user,
+                approve_url=approve_url
             )
             mail.send(msg)
+
         flash('Thanks for signing up! Your account is pending approval.', 'info')
         return redirect(url_for('login'))
+
     return render_template('register.html', form=form)
 
 #Login
