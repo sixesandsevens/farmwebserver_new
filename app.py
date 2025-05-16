@@ -145,11 +145,12 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        # ← look up by email, not username
+        user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
             return redirect(request.args.get('next') or url_for('index'))
-        flash('Invalid username or password')
+        flash('Invalid email or password')  # update message
     return render_template('login.html', form=form)
 
 @app.route('/logout')
