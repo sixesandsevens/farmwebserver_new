@@ -80,9 +80,6 @@ def load_user(user_id):
 
 # ─── YOUR EXISTING GALLERY, AUTH & FORUM ROUTES CONTINUE BELOW… ─────────────────
 
-
-# at top of app.py, after app = Flask(...)
-
 GALLERY_JSON = os.path.join(app.root_path, 'data', 'gallery.json')
 STATIC_GALLERY = os.path.join(app.root_path, 'static', 'gallery')
 os.makedirs(os.path.dirname(GALLERY_JSON), exist_ok=True)
@@ -126,16 +123,6 @@ mail = Mail(app)
 
 UPLOAD_FOLDER = os.path.join(app.static_folder, 'uploads')
 MAX_CONTENT_LENGTH=16 * 1024 * 1024
-
-# initialise extensions
-db.init_app(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 
 # helper JSON I/O
