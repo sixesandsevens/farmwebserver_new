@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta name="robots" content="noindex, nofollow">
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -27,19 +26,29 @@
         <a href="/zines">Zine Library</a>
         <a href="/forum">Forum</a>
         <a href="/feedback">Feedback</a>
-              <ul class="nav">
-  {% if current_user.is_authenticated %}
-    <li><a href="{{ url_for('account') }}">Logged in as {{ current_user.username }}</a></li>
-    <li><a href="{{ url_for('logout') }}">Logout</a></li>
-  {% else %}
-    <li><a href="{{ url_for('login') }}">Login</a></li>
-    <li><a href="{{ url_for('register') }}">Register</a></li>
-  {% endif %}
-</ul>
-      </div>
+        <ul class="nav">
+          {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('account') }}">Logged in as {{ current_user.username }}</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+          {% else %}
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+            <li><a href="{{ url_for('register') }}">Register</a></li>
+          {% endif %}
+        </ul>
       </div>
     </div>
   </nav>
+
+  <!-- flash messages: insert this block exactly here -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashes">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
   {% block content %}{% endblock %}
 
