@@ -19,6 +19,12 @@ from flask import render_template, flash, redirect, url_for, current_app
 from flask_mail import Mail, Message
 from forms import FeedbackForm
 
+from PIL import Image
+import piexif
+from io import BytesIO
+
+from flask import Response, send_from_directory
+
 app = Flask(__name__)
 
 # at top of app.py, after app = Flask(...)
@@ -54,6 +60,18 @@ app.config.update({
         'your.email@gmail.com'
     )
 })
+
+#robots.txt
+
+@app.route('/robots.txt')
+def robots_txt():
+    # if you put robots.txt in the static folder:
+    return send_from_directory(app.static_folder, 'robots.txt', mimetype='text/plain')
+
+@app.after_request
+def add_robots_header(response):
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    return response
 
 
 # Temporary—remove once you finish debugging
