@@ -1,5 +1,9 @@
 import os
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # no .env in production
 
 # Load .env into os.environ (for local dev); in production, set these env vars in your host
 load_dotenv()
