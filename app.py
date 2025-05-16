@@ -1,33 +1,85 @@
-# app.py
-import os, json, uuid
+import os
+from dotenv import load_dotenv
+
+# Load .env into os.environ (for local dev); in production, set these env vars in your host
+load_dotenv()
+
+import json, uuid
 from datetime import datetime
 from flask import (
     Flask, render_template, request, redirect, url_for,
     flash, session, jsonify, send_from_directory
 )
-from werkzeug.utils    import secure_filename
-from flask_sqlalchemy  import SQLAlchemy
-from flask_login       import (
+from werkzeug.utils import secure_filename
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import (
     LoginManager, login_user, logout_user,
     login_required, current_user
 )
+from flask_mail import Mail, Message
 
 from models import db, User
-from forms  import RegistrationForm, LoginForm, PasswordChangeForm
-
-from flask import render_template, flash, redirect, url_for, current_app
-from flask_mail import Mail, Message
-from forms import FeedbackForm
+from forms import (
+    RegistrationForm, LoginForm,
+    PasswordChangeForm, FeedbackForm
+)
 
 from PIL import Image
 import piexif
 from io import BytesIO
 
-from flask import Response, send_from_directory
+# ─── APP & CONFIG ───────────────────────────────────────────────────────────────
 
 app = Flask(__name__)
 
+# SECRET_KEY must be set in the environment
+_secret = os.getenv('SECRET_KEY')
+if not _secret:
+    raise RuntimeError("SECRET_KEY environment variable not set")
+app.config['SECRET_KEY'] = _secret
+
+# DATABASE_URL (e.g. mysql+pymysql://user:pw@host/db) must be set in the environment
+_db_url = os.getenv('DATABASE_URL')
+if not _db_url:
+    raise RuntimeError("DATABASE_URL environment variable not set")
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
+
+# Pool pings/recycle to avoid stale-connection errors
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280
+}
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Mail settings (also drawn from env vars)
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = (
+    os.getenv('MAIL_DEFAULT_SENDER_NAME', 'Farm Webserver'),
+    os.getenv('MAIL_DEFAULT_SENDER_EMAIL', 'no-reply@example.com')
+)
+
+# ─── EXTENSIONS ────────────────────────────────────────────────────────────────
+
+db.init_app(app)
+
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+mail = Mail(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# ─── YOUR EXISTING GALLERY, AUTH & FORUM ROUTES CONTINUE BELOW… ─────────────────
+
+
 # at top of app.py, after app = Flask(...)
+
 GALLERY_JSON = os.path.join(app.root_path, 'data', 'gallery.json')
 STATIC_GALLERY = os.path.join(app.root_path, 'static', 'gallery')
 os.makedirs(os.path.dirname(GALLERY_JSON), exist_ok=True)
@@ -36,34 +88,6 @@ os.makedirs(STATIC_GALLERY, exist_ok=True)
 if not os.path.isfile(GALLERY_JSON) or os.path.getsize(GALLERY_JSON) == 0:
     with open(GALLERY_JSON, 'w') as f:
         json.dump([], f)
-
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
-app.secret_key = 'dev'
-app.config['SECRET_KEY'] = 'your_secret_key'  # replace with a real one
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    'mysql+pymysql://'
-    'sixesandsevens:absolute9497@'                           # your PA username & password
-    'sixesandsevens.mysql.pythonanywhere-services.com/'      # <— note the trailing slash!
-    'sixesandsevens$default'                                 # your actual database name
-)
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
-    'pool_recycle': 280
-}
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config.update({
-    'MAIL_SERVER': 'smtp.gmail.com',         # your SMTP server (Gmail in this example)
-    'MAIL_PORT': 587,                        # TLS port
-    'MAIL_USE_TLS': True,                    # enable TLS encryption
-    'MAIL_USERNAME': 'chris.tanton86@gmail.com', # sender account username
-    'MAIL_PASSWORD': 'cqcx wqpr ssaq dxsc',  # sender account password (or use env var)
-    'MAIL_DEFAULT_SENDER': (                 # tuple(display name, email)
-        'Farm Webserver',
-        'your.email@gmail.com'
-    )
-})
-
 
 #robots.txt
 
