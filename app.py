@@ -37,7 +37,6 @@ if not os.path.isfile(GALLERY_JSON) or os.path.getsize(GALLERY_JSON) == 0:
     with open(GALLERY_JSON, 'w') as f:
         json.dump([], f)
 
-
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.secret_key = 'dev'
 app.config['SECRET_KEY'] = 'your_secret_key'  # replace with a real one
@@ -60,6 +59,19 @@ app.config.update({
         'your.email@gmail.com'
     )
 })
+
+# Initialize extensions
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///farm.db'
+app.config['SECRET_KEY'] = 'your-secret-key'
+
+db.init_app(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 
 #robots.txt
 
@@ -130,55 +142,46 @@ os.makedirs('data', exist_ok=True)
 
 # ---- AUTH ROUTES ----
 
-@app.route('/register', methods=['GET','POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    form = RegistrationForm()
+    form = RegisterForm()
     if form.validate_on_submit():
-        # double-check uniqueness
-        if User.query.filter_by(username=form.username.data).first():
-            flash("Username taken.", "danger")
-        elif User.query.filter_by(email=form.email.data).first():
-            flash("Email already registered.", "danger")
-        else:
-            user = User(
-                username=form.username.data,
-                email=form.email.data
-            )
-            user.set_password(form.password.data)
-            db.session.add(user)
-            db.session.commit()
-            flash("Registered! Please log in.", "success")
-            return redirect(url_for('login'))
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect(url_for('index'))
     return render_template('register.html', form=form)
 
-
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
-            return redirect(url_for('forum'))
-        flash("Invalid credentials.", "danger")
+            return redirect(request.args.get('next') or url_for('index'))
+        flash('Invalid username or password')
     return render_template('login.html', form=form)
 
-
 @app.route('/logout')
-#@login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
-
-@app.route('/account', methods=['GET','POST'])
-#login_required
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
 def account():
-    form = PasswordChangeForm()
+    form = ChangePasswordForm()
     if form.validate_on_submit():
-        current_user.set_password(form.new_password.data)
-        db.session.commit()
-        flash("Password updated.", "success")
+        if current_user.check_password(form.old_password.data):
+            current_user.set_password(form.new_password.data)
+            db.session.commit()
+            flash('Password updated')
+            return redirect(url_for('account'))
+        else:
+            flash('Old password is incorrect')
     return render_template('account.html', form=form)
 
 #mail
