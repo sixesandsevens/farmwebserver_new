@@ -216,6 +216,7 @@ os.makedirs('data', exist_ok=True)
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        # 1) Create the user (unapproved by default)
         user = User(
             username=form.username.data,
             email=form.email.data,
@@ -223,18 +224,24 @@ def register():
             approved=False
         )
         user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
 
-        # Notify admin via email
+        # 2) Save to the database
+        db.session.add(user)
+        db.session.commit()   # ← commit happens here
+
+        # 3) NOW insert the mail‐notification block
         admin_addr = current_app.config.get('ADMIN_EMAIL')
         if admin_addr:
+            # build the approval link
             approve_url = url_for('approve_user', user_id=user.id, _external=True)
+
+            # create the message
             msg = Message(
                 "🔔 New Pending Registration",
                 sender=current_app.config['MAIL_DEFAULT_SENDER'],
                 recipients=[admin_addr]
             )
+            # plain-text body
             msg.body = (
                 f"New user awaiting approval:\n\n"
                 f"Username: {user.username}\n"
@@ -242,16 +249,22 @@ def register():
                 f"Referred by: {user.referrer or 'N/A'}\n\n"
                 f"Approve here: {approve_url}"
             )
+            # HTML body (renders your templates/emails/pending_user.html)
             msg.html = render_template(
                 'emails/pending_user.html',
                 user=user,
                 approve_url=approve_url
             )
-            mail.send(msg)
 
+            # send it
+            mail.send(msg)
+        # ← end of mail block
+
+        # 4) Tell the registrant what’s next
         flash('Thanks for signing up! Your account is pending approval.', 'info')
         return redirect(url_for('login'))
 
+    # first GET or failed POST
     return render_template('register.html', form=form)
 
 #Login
