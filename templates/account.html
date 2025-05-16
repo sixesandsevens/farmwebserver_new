@@ -1,14 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
 
-{# Admin Panel - only visible to admin users #}
+{# Admin Panel Section: mirror account-settings styling #}
 {% if current_user.is_admin %}
 
 Admin Panel
 
-Pending User Approvals
-{# Add more admin actions here #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash {{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
 
+  <ul>
+    <li><a href="{{ url_for('pending_users') }}">Pending User Approvals</a></li>
+    {# Future admin actions go here #}
+  </ul>
+</section>
 
 {% endif %}
 
