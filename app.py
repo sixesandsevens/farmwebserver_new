@@ -169,14 +169,20 @@ def logout():
 def account():
     form = PasswordChangeForm()
     if form.validate_on_submit():
+        # Check that the old password matches
         if current_user.check_password(form.old_password.data):
+            # Update to the new password
             current_user.set_password(form.new_password.data)
             db.session.commit()
-            flash('Password updated')
+            # ← Flash success here
+            flash('Password updated successfully.', 'success')
+            # Redirect so refresh won’t re-submit the form
             return redirect(url_for('account'))
         else:
-            flash('Old password is incorrect')
+            # ← Flash failure here
+            flash('Old password is incorrect.', 'danger')
     return render_template('account.html', form=form)
+
 
 #mail
 

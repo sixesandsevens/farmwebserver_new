@@ -14,10 +14,20 @@
   {% endwith %}
 
   <form method="POST">
-    {{ form.hidden_tag() }}
-    <p>{{ form.new_password.label }}<br>{{ form.new_password() }}</p>
-    <p>{{ form.confirm.label }}<br>{{ form.confirm() }}</p>
-    <p>{{ form.submit() }}</p>
-  </form>
+  {{ form.hidden_tag() }}
+  <p>
+    {{ form.old_password.label }}<br>
+    {{ form.old_password() }}
+  </p>
+  <p>
+    {{ form.new_password.label }}<br>
+    {{ form.new_password() }}
+  </p>
+  <p>
+    {{ form.confirm.label }}<br>
+    {{ form.confirm() }}
+  </p>
+  <p>{{ form.submit() }}</p>
+</form>
 </main>
 {% endblock %}
