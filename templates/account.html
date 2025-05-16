@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
+
+{# Admin Panel - only visible to admin users #}
+{% if current_user.is_admin %}
+
+Admin Panel
+
+Pending User Approvals
+{# Add more admin actions here #}
+
+
+{% endif %}
+
+{# Account Settings Section #}
 <main class="container">
   <h2>Account Settings</h2>
 
