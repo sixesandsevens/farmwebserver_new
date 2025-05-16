@@ -1,12 +1,11 @@
 import os
+# Try to load a local .env file if python-dotenv is installed
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # no .env in production
-
-# Load .env into os.environ (for local dev); in production, set these env vars in your host
-load_dotenv()
+    # python-dotenv isn't installed in production—no worries
+    pass
 
 import json, uuid
 from datetime import datetime
