@@ -13,7 +13,6 @@ from flask import (
     Flask, render_template, request, redirect, url_for,
     flash, session, jsonify, send_from_directory
 )
-from app import mail
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
