@@ -1,27 +1,150 @@
-# app.py
-import os, json, uuid
+import os
+# Try to load a local .env file if python-dotenv is installed
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # python-dotenv isn't installed in production—no worries
+    pass
+
+import json, uuid
 from datetime import datetime
 from flask import (
     Flask, render_template, request, redirect, url_for,
     flash, session, jsonify, send_from_directory
 )
-from werkzeug.utils    import secure_filename
-from flask_sqlalchemy  import SQLAlchemy
-from flask_login       import (
+from werkzeug.utils import secure_filename
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import (
     LoginManager, login_user, logout_user,
     login_required, current_user
 )
+from flask import current_app
+from flask_mail import Mail, Message
 
 from models import db, User
-from forms  import RegistrationForm, LoginForm, PasswordChangeForm
+from forms import (
+    RegistrationForm, LoginForm,
+    PasswordChangeForm, FeedbackForm
+)
 
-from flask import render_template, flash, redirect, url_for, current_app
-from flask_mail import Mail, Message
-from forms import FeedbackForm
+from PIL import Image
+import piexif
+from io import BytesIO
+from functools import wraps
+from flask import abort
+
+
+
+
+
+# ─── APP & CONFIG ───────────────────────────────────────────────────────────────
 
 app = Flask(__name__)
 
-# at top of app.py, after app = Flask(...)
+#admin_required decorator
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not (current_user.is_authenticated and current_user.is_admin):
+            return abort(403)
+        return f(*args, **kwargs)
+    return decorated
+
+#aprove user
+
+@app.route('/admin/pending')
+@admin_required
+def pending_users():
+    users = User.query.filter_by(approved=False).all()
+    return render_template('admin_pending.html', users=users)
+
+@app.route('/admin/decline/<int:user_id>')
+@admin_required
+def decline_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'User {user.username!r} has been declined and removed.', 'warning')
+    return redirect(url_for('pending_users'))
+
+@app.route('/admin/approve/<int:user_id>')
+@admin_required
+def approve_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.approved = True
+    db.session.commit()
+    flash(f'User {user.username!r} approved.', 'success')
+    return redirect(url_for('pending_users'))
+
+# SECRET_KEY must be set in the environment
+_secret = os.getenv('SECRET_KEY')
+if not _secret:
+    raise RuntimeError("SECRET_KEY environment variable not set")
+app.config['SECRET_KEY'] = _secret
+
+# DATABASE_URL (e.g. mysql+pymysql://user:pw@host/db) must be set in the environment
+_db_url = os.getenv('DATABASE_URL')
+if not _db_url:
+    raise RuntimeError("DATABASE_URL environment variable not set")
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
+
+# Pool pings/recycle to avoid stale-connection errors
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280
+}
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Mail settings (also drawn from env vars)
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = (
+    os.getenv('MAIL_DEFAULT_SENDER_NAME', 'Farm Webserver'),
+    os.getenv('MAIL_DEFAULT_SENDER_EMAIL', 'no-reply@example.com')
+)
+
+# ─── EXTENSIONS ────────────────────────────────────────────────────────────────
+
+db.init_app(app)
+
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+mail = Mail(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# … after you configure login_manager …
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# ─── LOCK EVERYTHING BEHIND AUTH ────────────────────────────────────────────────
+
+@app.before_request
+def require_login():
+    # endpoints that should be publicly accessible
+    public = {
+        'login', 'register',          # your auth pages
+        'static',                     # flask’s static assets
+        'favicon'                     # if you serve one
+    }
+    # If they’re not logged in and they’re not hitting a public endpoint, send them to /login
+    if not current_user.is_authenticated and request.endpoint not in public:
+        return redirect(url_for('login', next=request.url))
+
+# ─── your existing routes follow below… ────────────────────────────────────────
+
+# ─── YOUR EXISTING GALLERY, AUTH & FORUM ROUTES CONTINUE BELOW… ─────────────────
+
 GALLERY_JSON = os.path.join(app.root_path, 'data', 'gallery.json')
 STATIC_GALLERY = os.path.join(app.root_path, 'static', 'gallery')
 os.makedirs(os.path.dirname(GALLERY_JSON), exist_ok=True)
@@ -31,29 +154,17 @@ if not os.path.isfile(GALLERY_JSON) or os.path.getsize(GALLERY_JSON) == 0:
     with open(GALLERY_JSON, 'w') as f:
         json.dump([], f)
 
+#robots.txt
 
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
-app.secret_key = 'dev'
-app.config['SECRET_KEY'] = 'your_secret_key'  # replace with a real one
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    'mysql+pymysql://'
-    'sixesandsevens:absolute9497@'                           # your PA username & password
-    'sixesandsevens.mysql.pythonanywhere-services.com/'      # <— note the trailing slash!
-    'sixesandsevens$default'                                 # your actual database name
-)
+@app.route('/robots.txt')
+def robots_txt():
+    # if you put robots.txt in the static folder:
+    return send_from_directory(app.static_folder, 'robots.txt', mimetype='text/plain')
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config.update({
-    'MAIL_SERVER': 'smtp.gmail.com',         # your SMTP server (Gmail in this example)
-    'MAIL_PORT': 587,                        # TLS port
-    'MAIL_USE_TLS': True,                    # enable TLS encryption
-    'MAIL_USERNAME': 'chris.tanton86@gmail.com', # sender account username
-    'MAIL_PASSWORD': 'cqcx wqpr ssaq dxsc',  # sender account password (or use env var)
-    'MAIL_DEFAULT_SENDER': (                 # tuple(display name, email)
-        'Farm Webserver',
-        'your.email@gmail.com'
-    )
-})
+@app.after_request
+def add_robots_header(response):
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+    return response
 
 
 # Temporary—remove once you finish debugging
@@ -78,16 +189,6 @@ mail = Mail(app)
 UPLOAD_FOLDER = os.path.join(app.static_folder, 'uploads')
 MAX_CONTENT_LENGTH=16 * 1024 * 1024
 
-# initialise extensions
-db.init_app(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
 
 # helper JSON I/O
 def load_json(path, fallback):
@@ -109,59 +210,105 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
-
 # ---- AUTH ROUTES ----
 
-@app.route('/register', methods=['GET','POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        # double-check uniqueness
-        if User.query.filter_by(username=form.username.data).first():
-            flash("Username taken.", "danger")
-        elif User.query.filter_by(email=form.email.data).first():
-            flash("Email already registered.", "danger")
-        else:
-            user = User(
-                username=form.username.data,
-                email=form.email.data
+        # 1) Create the user (unapproved by default)
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            referrer=form.referrer.data or None,
+            approved=False
+        )
+        user.set_password(form.password.data)
+
+        # 2) Save to the database
+        db.session.add(user)
+        db.session.commit()   # ← commit happens here
+
+        # 3) NOW insert the mail‐notification block
+        admin_addr = current_app.config.get('ADMIN_EMAIL')
+        if admin_addr:
+            # build the approval link
+            approve_url = url_for('approve_user', user_id=user.id, _external=True)
+
+            # create the message
+            msg = Message(
+                "🔔 New Pending Registration",
+                sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                recipients=[admin_addr]
             )
-            user.set_password(form.password.data)
-            db.session.add(user)
-            db.session.commit()
-            flash("Registered! Please log in.", "success")
-            return redirect(url_for('login'))
+            # plain-text body
+            msg.body = (
+                f"New user awaiting approval:\n\n"
+                f"Username: {user.username}\n"
+                f"Email:    {user.email}\n"
+                f"Referred by: {user.referrer or 'N/A'}\n\n"
+                f"Approve here: {approve_url}"
+            )
+            # HTML body (renders your templates/emails/pending_user.html)
+            msg.html = render_template(
+                'emails/pending_user.html',
+                user=user,
+                approve_url=approve_url
+            )
+
+            # send it
+            mail.send(msg)
+        # ← end of mail block
+
+        # 4) Tell the registrant what’s next
+        flash('Thanks for signing up! Your account is pending approval.', 'info')
+        return redirect(url_for('login'))
+
+    # first GET or failed POST
     return render_template('register.html', form=form)
 
+#Login
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
-            return redirect(url_for('forum'))
-        flash("Invalid credentials.", "danger")
+            if not user.approved:
+                flash('Your account is still awaiting approval.', 'warning')
+            else:
+                login_user(user)
+                flash('Logged in successfully.', 'success')
+                return redirect(url_for('account'))
+        else:
+            flash('Invalid email or password', 'danger')
     return render_template('login.html', form=form)
 
-
 @app.route('/logout')
-#@login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
-
-@app.route('/account', methods=['GET','POST'])
-#login_required
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
 def account():
     form = PasswordChangeForm()
     if form.validate_on_submit():
-        current_user.set_password(form.new_password.data)
-        db.session.commit()
-        flash("Password updated.", "success")
+        # Check that the old password matches
+        if current_user.check_password(form.old_password.data):
+            # Update to the new password
+            current_user.set_password(form.new_password.data)
+            db.session.commit()
+            # ← Flash success here
+            flash('Password updated successfully.', 'success')
+            # Redirect so refresh won’t re-submit the form
+            return redirect(url_for('account'))
+        else:
+            # ← Flash failure here
+            flash('Old password is incorrect.', 'danger')
     return render_template('account.html', form=form)
+
 
 #mail
 

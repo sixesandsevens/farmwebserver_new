@@ -9,6 +9,7 @@ from models import User
 class RegistrationForm(FlaskForm):
     username         = StringField('Username', validators=[DataRequired()])
     email            = StringField('Email',    validators=[DataRequired(), Email()])
+    referrer         = StringField('Referred by', validators=[Length(max=120)])
     password         = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password',
                                      validators=[DataRequired(), EqualTo('password')])
@@ -28,11 +29,26 @@ class LoginForm(FlaskForm):
     submit   = SubmitField('Login')
 
 class PasswordChangeForm(FlaskForm):
-    new_password = PasswordField('New Password', validators=[DataRequired()])
-    confirm      = PasswordField('Confirm New Password',
-                                 validators=[DataRequired(), EqualTo('new_password',
-                                       message="Passwords must match")])
-    submit       = SubmitField('Update Password')
+    old_password = PasswordField(
+        'Old Password',
+        validators=[DataRequired()]
+    )
+    new_password = PasswordField(
+        'New Password',
+        validators=[DataRequired()]
+    )
+    confirm = PasswordField(
+        'Confirm New Password',
+        validators=[
+            DataRequired(),
+            EqualTo(
+                'new_password',
+                message="Passwords must match"
+            )
+        ]
+    )
+    submit = SubmitField('Update Password')
+
 
 class FeedbackForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(max=50)])
