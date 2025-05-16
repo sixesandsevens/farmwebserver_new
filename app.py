@@ -144,7 +144,7 @@ os.makedirs('data', exist_ok=True)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    form = RegisterForm()
+    form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
@@ -173,7 +173,7 @@ def logout():
 @app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
-    form = ChangePasswordForm()
+    form = PasswordChangeForm()
     if form.validate_on_submit():
         if current_user.check_password(form.old_password.data):
             current_user.set_password(form.new_password.data)
