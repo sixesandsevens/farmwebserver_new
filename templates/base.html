@@ -32,9 +32,6 @@
       
             <li><a href="{{ url_for('account') }}">Logged in as {{ current_user.username }}</a></li>
             <li><a href="{{ url_for('logout') }}">Logout</a></li>
-          
-            <li><a href="{{ url_for('login') }}">Login</a></li>
-            <li><a href="{{ url_for('register') }}">Register</a></li>
           {% endif %}
         </ul>
       </div>
