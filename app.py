@@ -1,11 +1,6 @@
 import os
-# Try to load a local .env file if python-dotenv is installed
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    # python-dotenv isn't installed in production—no worries
-    pass
+
+from config import Config
 
 import json, uuid
 from datetime import datetime
@@ -41,6 +36,8 @@ from flask import abort
 # ─── APP & CONFIG ───────────────────────────────────────────────────────────────
 
 app = Flask(__name__)
+
+app.config.from_object(Config)
 
 #admin_required decorator
 
